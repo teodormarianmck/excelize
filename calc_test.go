@@ -1420,6 +1420,8 @@ func TestCalcCellValue(t *testing.T) {
 		"ERROR.TYPE(XOR(\"text\"))": "3",
 		"ERROR.TYPE(HEX2BIN(2,1))":  "6",
 		"ERROR.TYPE(NA())":          "7",
+		// BLANK
+		"BLANK()": "",
 		// ISBLANK
 		"ISBLANK(A1)": "FALSE",
 		"ISBLANK(A5)": "TRUE",
@@ -3615,6 +3617,9 @@ func TestCalcCellValue(t *testing.T) {
 		// ERROR.TYPE
 		"ERROR.TYPE()":  {"#VALUE!", "ERROR.TYPE requires 1 argument"},
 		"ERROR.TYPE(1)": {"#N/A", "#N/A"},
+		// BLANK
+		"BLANK(1)":     {"#VALUE!", "BLANK requires no arguments"},
+		"BLANK(A1,A2)": {"#VALUE!", "BLANK requires no arguments"},
 		// ISBLANK
 		"ISBLANK(A1,A2)": {"#VALUE!", "ISBLANK requires 1 argument"},
 		// ISERR
@@ -4776,6 +4781,24 @@ func TestCalcISBLANK(t *testing.T) {
 	result := fn.ISBLANK(argsList)
 	assert.Equal(t, "TRUE", result.Value())
 	assert.Empty(t, result.Error)
+}
+
+func TestCalcBLANK(t *testing.T) {
+	fn := formulaFuncs{}
+
+	// Test BLANK with no arguments (correct usage)
+	argsList := list.New()
+	result := fn.BLANK(argsList)
+	assert.Equal(t, "", result.Value())
+	assert.Equal(t, ArgEmpty, result.Type)
+	assert.Empty(t, result.Error)
+
+	// Test BLANK with arguments (should error)
+	argsListWithArgs := list.New()
+	argsListWithArgs.PushBack(formulaArg{Type: ArgNumber, Number: 1})
+	resultWithArgs := fn.BLANK(argsListWithArgs)
+	assert.Equal(t, ArgError, resultWithArgs.Type)
+	assert.Equal(t, "BLANK requires no arguments", resultWithArgs.Error)
 }
 
 func TestCalcAND(t *testing.T) {

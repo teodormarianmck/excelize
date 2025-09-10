@@ -405,6 +405,7 @@ type formulaFuncs struct {
 //	BITOR
 //	BITRSHIFT
 //	BITXOR
+//	BLANK
 //	CEILING
 //	CEILING.MATH
 //	CEILING.PRECISE
@@ -2191,6 +2192,18 @@ func (fn *formulaFuncs) bitwise(name string, argsList *list.List) formulaArg {
 	}
 	bitwiseFunc := bitwiseFuncMap[name]
 	return newNumberFormulaArg(float64(bitwiseFunc(int(num1.Number), int(num2.Number))))
+}
+
+// BLANK function returns an empty cell. This function is typically used in
+// conjunction with other functions when you want to return a blank result.
+// The syntax of the function is:
+//
+//	BLANK()
+func (fn *formulaFuncs) BLANK(argsList *list.List) formulaArg {
+	if argsList.Len() != 0 {
+		return newErrorFormulaArg(formulaErrorVALUE, "BLANK requires no arguments")
+	}
+	return newEmptyFormulaArg()
 }
 
 // COMPLEX function takes two arguments, representing the real and the
