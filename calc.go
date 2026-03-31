@@ -405,6 +405,7 @@ type formulaFuncs struct {
 //	BITOR
 //	BITRSHIFT
 //	BITXOR
+//	BLANK
 //	CEILING
 //	CEILING.MATH
 //	CEILING.PRECISE
@@ -1068,8 +1069,9 @@ func (f *File) evalInfixExpFunc(ctx *calcContext, sheet, cell string, token, nex
 	}
 	prepareEvalInfixExp(opfStack, opftStack, opfdStack, argsStack)
 	// call formula function to evaluate
-	arg := callFuncByName(&formulaFuncs{f: f, sheet: sheet, cell: cell, ctx: ctx}, strings.NewReplacer(
-		"_xlfn.", "", ".", "dot").Replace(opfStack.Peek().(efp.Token).TValue),
+	funcName := strings.NewReplacer(
+		"_xlfn.", "", "_XLFN.", "", ".", "dot").Replace(strings.ToUpper(opfStack.Peek().(efp.Token).TValue))
+	arg := callFuncByName(&formulaFuncs{f: f, sheet: sheet, cell: cell, ctx: ctx}, funcName,
 		[]reflect.Value{reflect.ValueOf(argsStack.Peek().(*list.List))})
 	if arg.Type == ArgError && opfStack.Len() == 1 {
 		return arg
@@ -2190,6 +2192,18 @@ func (fn *formulaFuncs) bitwise(name string, argsList *list.List) formulaArg {
 	}
 	bitwiseFunc := bitwiseFuncMap[name]
 	return newNumberFormulaArg(float64(bitwiseFunc(int(num1.Number), int(num2.Number))))
+}
+
+// BLANK function returns an empty cell. This function is typically used in
+// conjunction with other functions when you want to return a blank result.
+// The syntax of the function is:
+//
+//	BLANK()
+func (fn *formulaFuncs) BLANK(argsList *list.List) formulaArg {
+	if argsList.Len() != 0 {
+		return newErrorFormulaArg(formulaErrorVALUE, "BLANK requires no arguments")
+	}
+	return newEmptyFormulaArg()
 }
 
 // COMPLEX function takes two arguments, representing the real and the
